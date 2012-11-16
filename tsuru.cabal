@@ -1,0 +1,18 @@
+Name: Tsuru
+Version: 0.1
+Description: Sample code for Tsuru
+Author: Izaak Meckler
+Maintainer: izaakmeckler@me.com
+Category: Network
+Build-Type: Simple
+Cabal-Version: >= 1.16
+
+
+Executable tsuru
+  Main-is: Main.hs
+  Build-depends:
+      attoparsec >= 0.10.2.0
+    , base >= 4.0 && < 5.0
+    , bytestring >= 0.9.1 && < 0.9.3
+    , containers >= 0.4 && < 0.6
+    , pcap >= 0.4.5 && < 0.5
