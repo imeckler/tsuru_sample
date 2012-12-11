@@ -29,7 +29,8 @@ data QuotePacket = Packet { time      :: B.ByteString
     deriving (Show, Eq, Ord)
 
 type PktTime = Int64
-type PcapState = ((QuotePacket, PktTime), S.Set (QuotePacket, PktTime), S.Set (QuotePacket, PktTime))
+type TimedQuotePkt = (QuotePacket, PktTime)
+type PcapState = (TimedQuotePkt, S.Set TimedQuotePkt, S.Set TimedQuotePkt)
 
 parseOffer :: A.Parser Offer
 parseOffer = Offer <$> price <*> qty
@@ -49,7 +50,7 @@ parsePacket = do
     A.take 50
     time <- A.take 8
     A.word8 255
-    return $ Packet {issueCode, bids, asks, time}
+    return Packet {issueCode, bids, asks, time}
 
 toRow :: QuotePacket -> B.ByteString
 toRow Packet {..} = B.intercalate (singleton ' ') $ issueCode : (bidStrs ++ askStrs) ++ [time]
@@ -79,12 +80,12 @@ processSet ref hdr s = whenRight (A.parseOnly parsePacket s) $ \newPkt -> do
             printPacket waitingPkt
             let (nextPktTup, newAfters) = second (S.insert newTup) $ S.deleteFindMin afters
             writeIORef ref (nextPktTup, S.empty, newAfters)
-        else do
-            writeIORef ref $ case time newPkt <= time waitingPkt of
-                True  -> (pktTup, S.insert newTup befores, afters)
-                False -> (pktTup, befores, S.insert newTup afters)
+        else 
+            writeIORef ref $ if time newPkt <= time waitingPkt
+                then (pktTup, S.insert newTup befores, afters)
+                else (pktTup, befores, S.insert newTup afters)
 
-getFirstQuotePacket :: PcapHandle -> IO (QuotePacket, PktTime)
+getFirstQuotePacket :: PcapHandle -> IO TimedQuotePkt
 getFirstQuotePacket handle = do
     (hdr, s) <- nextBS handle
     case A.parseOnly parsePacket s of
@@ -92,7 +93,7 @@ getFirstQuotePacket handle = do
         Right x -> return (x, hdrTime hdr)
 
 outputUnordered :: PcapHandle -> IO ()
-outputUnordered handle = dispatchBS handle (-1) process >> return ()
+outputUnordered handle = void $ dispatchBS handle (-1) process
 
 outputOrdered :: PcapHandle -> IO ()
 outputOrdered handle = do
