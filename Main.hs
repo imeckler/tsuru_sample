@@ -68,7 +68,7 @@ onPacketParseSuccess f = flip whenRight f . A.parseOnly parsePacket
 process :: PktHdr -> B.ByteString -> IO ()
 process hdr = onPacketParseSuccess printPacket
 
-processSet :: (IORef PcapState) -> PktHdr -> B.ByteString -> IO ()
+processSet :: IORef PcapState -> PktHdr -> B.ByteString -> IO ()
 processSet ref hdr s = whenRight (A.parseOnly parsePacket s) $ \newPkt -> do
     (pktTup@(waitingPkt, t0), befores, afters) <- readIORef ref
     let newTup@(_, newPktTime) = (newPkt, hdrTime hdr)
