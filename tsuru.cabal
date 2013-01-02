@@ -6,6 +6,7 @@ Maintainer: izaakmeckler@me.com
 Category: Network
 Build-Type: Simple
 Cabal-Version: >= 1.16
+ghc-options: -O2
 
 
 Executable tsuru
