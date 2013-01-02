@@ -53,7 +53,7 @@ parsePacket = do
     return Packet {issueCode, bids, asks, time}
 
 toRow :: QuotePacket -> B.ByteString
-toRow Packet {..} = B.intercalate (singleton ' ') $ issueCode : (bidStrs ++ askStrs) ++ [time]
+toRow Packet {..} = B.intercalate (singleton ' ') $ issueCode : bidStrs ++ askStrs ++ [time]
     where bidStrs = map offerStr $ reverse bids
           askStrs = map offerStr asks
           offerStr (Offer p q) = B.concat [q, "@", p]
